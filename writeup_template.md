@@ -80,7 +80,19 @@ For isolating and converting the lines to a binary image of the road I used a co
 - Gradient detection combinded (x==1 and y==0) results in:  
 ![alt text][image12]
 
-![alt text][image3]
+- Addtional there is the HLS binary detection to get independ of lane colors
+![alt text][image13]
+- Also used is the direction binary image
+![alt text][image14]
+- With finally the method of magnidute
+![alt text][image17]
+
+- Combining thoses methods like ((hls_binary == 1) & (dir_binary == 1)) | ((mag_binary==1)& (dir_binary == 1)) comes up with
+![alt text][image10]
+
+All methods combinded together is a powerfull tool of creating a binary image with the key elements
+
+![alt text][image11]
 
 ####3. Describe how (and identify where in your code) you performed a perspective transform and provide an example of a transformed image.
 
