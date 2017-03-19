@@ -98,42 +98,75 @@ All methods combinded together is a powerfull tool of creating a binary image wi
 
 The code for my perspective transform includes a function called `warper()`, which appears in lines 1 through 8 in the file `example.py` (output_images/examples/example.py) (or, for example, in the 3rd code cell of the IPython notebook).  The `warper()` function takes as inputs an image (`img`), as well as source (`src`) and destination (`dst`) points.  I chose the hardcode the source and destination points in the following manner:
 
-```
-src = np.float32(
-    [[(img_size[0] / 2) - 55, img_size[1] / 2 + 100],
-    [((img_size[0] / 6) - 10), img_size[1]],
-    [(img_size[0] * 5 / 6) + 60, img_size[1]],
-    [(img_size[0] / 2 + 55), img_size[1] / 2 + 100]])
-dst = np.float32(
-    [[(img_size[0] / 4), 0],
-    [(img_size[0] / 4), img_size[1]],
-    [(img_size[0] * 3 / 4), img_size[1]],
-    [(img_size[0] * 3 / 4), 0]])
+The code of transforming the image is definded in the helper class ImageProcessing::transformImg.
+Input to the function is the binary image with was created before in the pipeline.
+A source and destination point is definded by:
 
 ```
+ (h, w) = (img.shape[0], img.shape[1])
+    source = np.float32([[w // 2 - 76, h * .625], [w // 2 + 76, h * .625], [-100, h], [w + 100, h]])
+    destination = np.float32([[100, 0], [w - 100, 0], [100, h], [w - 100, h]])
+
+```
+
+Those values come up from "playing" around and checking other comments on the project channel. That is a important step and for real application there is a high need of correct tuning those parameters according to situations and use cases.
 This resulted in the following source and destination points:
 
 | Source        | Destination   | 
 |:-------------:|:-------------:| 
-| 585, 460      | 320, 0        | 
-| 203, 720      | 320, 720      |
-| 1127, 720     | 960, 720      |
-| 695, 460      | 960, 0        |
+| 564, 450      | 100, 0        | 
+| 716, 450      | 1180,       |
+| -100, 720     | 100, 720      |
+| 1380, 720      | 1180, 720        |
 
 I verified that my perspective transform was working as expected by drawing the `src` and `dst` points onto a test image and its warped counterpart to verify that the lines appear parallel in the warped image.
 
-![alt text][image4]
+![alt text][image7]
 
 ####4. Describe how (and identify where in your code) you identified lane-line pixels and fit their positions with a polynomial?
 
-Then I did some other stuff and fit my lane lines with a 2nd order polynomial kinda like this:
+To detected the lanes I reused part of the code with was provided in the classroom.
+So basically the binary pictured is sliced in 9 windows. Thoses windows were first located on the bottom of the picture where out of a histgrams result is a expected line. In every step there is a new window created to find the line in a range around the last windoww
 
-![alt text][image5]
+![alt text][image7]
 
 ####5. Describe how (and identify where in your code) you calculated the radius of curvature of the lane and the position of the vehicle with respect to center.
 
-I did this in lines # through # in my code in `my_other_file.py`
+The class Lane provides a object which all information about the detected lane. So out of the findLanes image processing a measurement is added to the line class.
 
+...
+
+    left_fitx,right_fitx,left_fit,right_fit,ploty,frame4 = ImageProcessing.findLines(frame3)
+    
+    LeftLine.addMeasurement(left_fitx,ploty,left_fit)
+    RightLine.addMeasurement(right_fitx,ploty,right_fit)
+...
+
+On adding values to a line object there is running the filtering and measurement of curvature and position.
+Out of the classroom there is used the 2. derivate to caluculate the  curvature:
+
+...
+    def CalcCurvature(self):
+            # Define conversions in x and y from pixels space to meters
+            ym_per_pix = (30/720) # meters per pixel in y dimension
+            xm_per_pix = (3.7/700) # meters per pixel in x dimension
+
+            ploty = self.ally
+            fit_cr=self.current_fit
+            y_eval = np.max(ploty)
+
+            # Fit new polynomials to x,y in world space
+            left_fit_cr = np.polyfit(ploty*ym_per_pix, self.bestx*xm_per_pix, 2)
+            # Calculate the new radii of curvature
+            curverad = ((1 + (2*left_fit_cr[0]*y_eval*ym_per_pix + left_fit_cr[1])**2)**1.5) / np.absolute(2*left_fit_cr[0])
+
+
+            return curverad
+ ...
+
+The raw measurments of the image processing with the position of the lane is filterd for the last 10 images.
+
+s
 ####6. Provide an example image of your result plotted back down onto the road such that the lane area is identified clearly.
 
 I implemented this step in lines # through # in my code in `yet_another_file.py` in the function `map_lane()`.  Here is an example of my result on a test image:
