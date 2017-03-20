@@ -128,7 +128,7 @@ I verified that my perspective transform was working as expected by drawing the 
 To detected the lanes I reused part of the code with was provided in the classroom.
 So basically the binary pictured is sliced in 9 windows. Thoses windows were first located on the bottom of the picture where out of a histgrams result is a expected line. In every step there is a new window created to find the line in a range around the last windoww
 
-![alt text][image7]
+![alt text][image8]
 
 ####5. Describe how (and identify where in your code) you calculated the radius of curvature of the lane and the position of the vehicle with respect to center.
 
@@ -169,9 +169,33 @@ The raw measurments of the image processing with the position of the lane is fil
 s
 ####6. Provide an example image of your result plotted back down onto the road such that the lane area is identified clearly.
 
-I implemented this step in lines # through # in my code in `yet_another_file.py` in the function `map_lane()`.  Here is an example of my result on a test image:
+I used the opencv function warpPerspective with the same values as before - just the otherway around
 
-![alt text][image6]
+...
+ def transform2RealImg(undist,frame_warped,Minv,left_fitx,right_fitx,ploty):
+     # Create an image to draw the lines on
+     warp_zero = np.zeros_like(frame_warped).astype(np.uint8)
+     color_warp = np.dstack((warp_zero, warp_zero, warp_zero))
+
+     # Recast the x and y points into usable format for cv2.fillPoly()
+     pts_left = np.array([np.transpose(np.vstack([left_fitx, ploty]))])
+     pts_right = np.array([np.flipud(np.transpose(np.vstack([right_fitx, ploty])))])
+     pts = np.hstack((pts_left, pts_right))
+
+     # Draw the lane onto the warped blank image
+     cv2.fillPoly(color_warp, np.int_([pts]), (0,255, 0))
+
+     # Warp the blank back to original image space using inverse perspective matrix (Minv)
+     newwarp = cv2.warpPerspective(color_warp, Minv, (frame_warped.shape[1], frame_warped.shape[0])) 
+     # Combine the result with the original image
+     result = cv2.addWeighted(undist, 1, newwarp, 0.3, 0)
+     #plt.imshow(result)
+     #plt.show()
+     return result
+     ...
+
+
+![alt text][image9]
 
 ---
 
@@ -179,13 +203,20 @@ I implemented this step in lines # through # in my code in `yet_another_file.py`
 
 ####1. Provide a link to your final video output.  Your pipeline should perform reasonably well on the entire project video (wobbly lines are ok but no catastrophic failures that would cause the car to drive off the road!).
 
-Here's a [link to my video result](./project_video.mp4)
+Here's a [link to my video result](./output_images/output.avi)
+
+[video1]
+
 
 ---
 
 ###Discussion
 
-####1. Briefly discuss any problems / issues you faced in your implementation of this project.  Where will your pipeline likely fail?  What could you do to make it more robust?
+####1. Briefly discuss any problems / issues you faced in your implementation of this project.  Where will your pipeline likely fail?  
 
-Here I'll talk about the approach I took, what techniques I used, what worked and why, where the pipeline might fail and how I might improve it if I were going to pursue this project further.  
+There is strong need of tuning and changed threshold for binary image detection.
+In various situation there are other lines detected than the lane lines.
+
+Additional to binary image lane detection there shall be a region filtering adpative to vehicle speed, lateral acceleration and yaw rate.
+
 
